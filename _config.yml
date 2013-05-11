@@ -5,7 +5,4 @@ pygments: false
 permalink: /:title/
 
 gekyll:
-    extras:
-        - commits
-        - diffs
     verbose: true

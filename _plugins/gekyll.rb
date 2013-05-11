@@ -69,7 +69,7 @@ module Jekyll
         # "_posts/my-awesome-post.git"
         def self.in_repo?(name)
             pn = name.split('/')[0]
-            puts "#{pn + '/.git'}"
+            #puts "#{pn + '/.git'}"
             Dir.exists?("_posts/" + pn + "/.git")
         end
 
@@ -107,6 +107,7 @@ module Jekyll
                 @gekyll_config = GEKYLL_DEFAULTS.merge(@site.config['gekyll'] || {})
                 self.log ">> Processing Gekyll post: #{name}"
                 @repo = Grit::Repo.new File.join(@base, @is_bare ? name : "#{name}/.git")
+                puts "git dir: #{File.join(@base, @is_bare ? name : "#{name}/.git").to_s}"
                 @commits = @repo.commits("master", 10e10)
             end
 
@@ -147,6 +148,8 @@ module Jekyll
             rescue => e
                 puts "YAML Exception reading #{name}: #{e.message}"
             end
+            puts "YOOOHOHOO: #{self.content}"
+            self.extracted_excerpt = self.content
 
             # Add "is_repo" variable to YAML-read data,
             # and set relevant data fields
