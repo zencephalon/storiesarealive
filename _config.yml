@@ -1,2 +1,4 @@
-name: Your New Jekyll Site
-pygments: true
+name: Stories are Alive
+description: Let your writing flourish
+url: storiesarealive.com
+pygments: false
