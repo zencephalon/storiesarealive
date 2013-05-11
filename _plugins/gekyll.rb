@@ -149,7 +149,7 @@ module Jekyll
                 puts "YAML Exception reading #{name}: #{e.message}"
             end
             puts "YOOOHOHOO: #{self.content}"
-            self.extracted_excerpt = self.content
+            self.extracted_excerpt = ""
 
             # Add "is_repo" variable to YAML-read data,
             # and set relevant data fields
