@@ -3,3 +3,9 @@ description: Let your writing flourish
 url: storiesarealive.com
 pygments: false
 permalink: /:title/
+
+gekyll:
+    extras:
+        - commits
+        - diffs
+    verbose: true
