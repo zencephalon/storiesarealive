@@ -2,3 +2,4 @@ name: Stories are Alive
 description: Let your writing flourish
 url: storiesarealive.com
 pygments: false
+permalink: /:title/
