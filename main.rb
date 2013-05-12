@@ -9,8 +9,28 @@ require 'mongo'
 enable :sessions
 
 client = Mongo::MongoClient.new('localhost', 27017)
-db = client.db('auth-example')
+db = client.db('storiesarealive')
 users = db.collection('users')
+drafts = db.collection('drafts')
+DATA_DIR = "./data"
+
+class Draft
+    def initialize(user, draft, content)
+        @client = Mongo::MongoClient.new('localhost', 27017)
+        @db = @client.db('storiesarealive')
+        @drafts = @db.collection('drafts')
+
+        if @drafts.find_one({:user => user, :draft => draft})
+            raise 'Draft already exists'
+        end
+
+        @user, @draft, @content = user, draft, content
+        @dir = "#{DATA_DIR}/#{@user}/#{@draft}"
+        `mkdir #{@dir}`
+        `git init #{@dir}`
+        @drafts.insert({:user => @user, :draft => @draft, :dir => @dir})
+    end
+end
 
 helpers do
     def logged_in?
@@ -39,6 +59,8 @@ get "/" do
 end
 
 put "/draft", :auth => :user do
+    draft = Draft.new(username, params[:title], params[:content])
+    redirect '/'
 end
 
 get "/draft/new", :auth => :user do
@@ -55,17 +77,21 @@ post "/signup" do
 
     username = params[:username].gsub /[^a-z0-9\-]+/i, '_'
 
+    if users.find_one({:user => params[:username]})
+        redirect "/login"
+    end
+
     # save into mongodb
-    id = users.insert({
-            :_id => username,
-            :salt => password_salt,
-            :passwordhash => password_hash 
-        })
+    users.insert({
+        :user => username,
+        :salt => password_salt,
+        :passwordhash => password_hash 
+    })
 
     session[:username] = username
 
     # create the directory where we will store git repos for the user
-    `mkdir ./data/#{username}`
+    `mkdir #{DATA_DIR}/#{username}`
 
     redirect "/"
 end
@@ -75,7 +101,7 @@ get "/login" do
 end
 
 post "/login" do
-    if user = users.find_one({:_id => params[:username]})
+    if user = users.find_one({:name => params[:username]})
         if user["passwordhash"] == BCrypt::Engine.hash_secret(params[:password], user["salt"])
             session[:username] = params[:username]
             redirect "/"
