@@ -8,19 +8,16 @@ require 'mongo'
 
 enable :sessions
 
-client = Mongo::MongoClient.new('localhost', 27017)
-db = client.db('storiesarealive')
-users = db.collection('users')
-drafts = db.collection('drafts')
+$client = Mongo::MongoClient.new('localhost', 27017)
+$db = $client.db('storiesarealive')
+$users = $db.collection('users')
+$drafts = $db.collection('drafts')
 DATA_DIR = "./data"
 
 class Draft
-    def initialize(user, draft, content)
-        @client = Mongo::MongoClient.new('localhost', 27017)
-        @db = @client.db('storiesarealive')
-        @drafts = @db.collection('drafts')
 
-        if @drafts.find_one({:user => user, :draft => draft})
+    def initialize(user, draft, content)
+        if $drafts.find_one({:user => user, :draft => draft})
             raise 'Draft already exists'
         end
 
@@ -28,12 +25,16 @@ class Draft
         @dir = "#{DATA_DIR}/#{@user}/#{@draft}"
         `mkdir #{@dir}`
         `git init #{@dir}`
-        @drafts.insert({:user => @user, :draft => @draft, :dir => @dir})
+        $drafts.insert({:user => @user, :draft => @draft, :dir => @dir})
         File.open("#{@dir}/draft.textile", 'w') do |f|
             f.puts @content
         end
         `git --git-dir=#{@dir}/.git --work-tree=#{@dir} add draft.textile`
         `git --git-dir=#{@dir}/.git --work-tree=#{@dir} commit -a -m 'initial commit'`
+    end
+
+    def self.get_drafts(user)
+        $drafts.find({:user => user}).to_a
     end
 end
 
@@ -68,6 +69,11 @@ put "/draft", :auth => :user do
     redirect '/'
 end
 
+get "/draft", :auth => :user do
+    drafts = Draft.get_drafts(username)
+    liquid :draft_list, :locals => { :drafts => drafts }
+end
+
 get "/draft/new", :auth => :user do
     liquid :draft, :locals => { :title => "Write a new draft!" }
 end
@@ -82,12 +88,12 @@ post "/signup" do
 
     username = params[:username].gsub /[^a-z0-9\-]+/i, '_'
 
-    if users.find_one({:user => params[:username]})
+    if $users.find_one({:user => params[:username]})
         redirect "/login"
     end
 
     # save into mongodb
-    users.insert({
+    $users.insert({
         :user => username,
         :salt => password_salt,
         :passwordhash => password_hash 
@@ -106,7 +112,7 @@ get "/login" do
 end
 
 post "/login" do
-    if user = users.find_one({:name => params[:username]})
+    if user = $users.find_one({:name => params[:username]})
         if user["passwordhash"] == BCrypt::Engine.hash_secret(params[:password], user["salt"])
             session[:username] = params[:username]
             redirect "/"
