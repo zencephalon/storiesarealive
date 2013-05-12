@@ -13,7 +13,7 @@ db = client.db('auth-example')
 users = db.collection('users')
 
 helpers do
-    def login?
+    def logged_in?
         if session[:username].nil?
             return false
         else
@@ -26,8 +26,23 @@ helpers do
     end
 end
 
+set(:auth) do |roles| # <- notice the splat here
+  condition do
+    unless logged_in?
+      redirect "/", 303
+    end
+  end
+end
+
 get "/" do
-    liquid :index, :locals => { :user => username, :title => "Welcome!" }
+    liquid :index, :locals => { :user => username, :logged_in => logged_in?, :title => "Welcome!" }
+end
+
+put "/draft", :auth => :user do
+end
+
+get "/draft/new", :auth => :user do
+    liquid :draft, :locals => { :title => "Write a new draft!" }
 end
 
 get "/signup" do
@@ -38,14 +53,20 @@ post "/signup" do
     password_salt = BCrypt::Engine.generate_salt
     password_hash = BCrypt::Engine.hash_secret(params[:password], password_salt)
 
+    username = params[:username].gsub /[^a-z0-9\-]+/i, '_'
+
     # save into mongodb
     id = users.insert({
-            :_id => params[:username],
+            :_id => username,
             :salt => password_salt,
             :passwordhash => password_hash 
         })
 
-    session[:username] = params[:username]
+    session[:username] = username
+
+    # create the directory where we will store git repos for the user
+    `mkdir ./data/#{username}`
+
     redirect "/"
 end
 
