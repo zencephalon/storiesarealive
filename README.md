@@ -1,4 +1,4 @@
-sinatra-mongo-authentication-example
+Stories are Alive
 ====================================
 
-Simple Sinatra authentication example using Mongodb and Bcrypt
+Grow your stories with your friends and watch them flourish.

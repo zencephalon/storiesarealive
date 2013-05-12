@@ -31,7 +31,7 @@ get "/" do
 end
 
 get "/signup" do
-    haml :signup
+    liquid :signup, :locals => { :title => "Signup!" }
 end
 
 post "/signup" do
@@ -60,30 +60,10 @@ post "/login" do
             redirect "/"
         end
     end
-    haml :error
+    liquid :error
 end
 
 get "/logout" do
     session[:username] = nil
     redirect "/"
 end
-
-__END__
-@@signup
-%p Enter the username and password!
-%form(action="/signup" method="post")
-  %div
-    %label(for="username")Username:
-    %input#username(type="text" name="username")
-  %div
-    %label(for="password")Password:
-    %input#password(type="password" name="password")
-  %div
-    %label(for="checkpassword")Password:
-    %input#password(type="password" name="checkpassword")
-  %div
-    %input(type="submit" value="Sign Up")
-    %input(type="reset" value="Clear")
-@@error
-%p Wrong username or password
-%p Please try again!
