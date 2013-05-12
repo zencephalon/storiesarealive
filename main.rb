@@ -29,6 +29,11 @@ class Draft
         `mkdir #{@dir}`
         `git init #{@dir}`
         @drafts.insert({:user => @user, :draft => @draft, :dir => @dir})
+        File.open("#{@dir}/draft.textile", 'w') do |f|
+            f.puts @content
+        end
+        `git --git-dir=#{@dir}/.git --work-tree=#{@dir} add draft.textile`
+        `git --git-dir=#{@dir}/.git --work-tree=#{@dir} commit -a -m 'initial commit'`
     end
 end
 
