@@ -23,14 +23,14 @@ class Draft
     end
 
     def create
-        if $drafts.find_one({:user => user, :draft => draft})
+        if $drafts.find_one({:user => @user, :draft => @draft})
             raise 'Draft already exists'
         end
 
         `mkdir #{@dir}`
         `git init #{@dir}`
 
-        draft_id = $users.find_and_modify(:query => {:user => user}, :update => {"$inc" => {"draft_count" => 1}}, :new => true)
+        draft_id = $users.find_and_modify(:query => {:user => @user}, :update => {"$inc" => {"draft_count" => 1}}, :new => true)['draft_count']
         $drafts.insert({:user => @user, :draft => @draft, :dir => @dir, :num => draft_id})
 
         File.open("#{@dir}/draft.textile", 'w') do |f|
@@ -96,7 +96,7 @@ end
 
 get "/draft/:num", :auth => :user do
     draft = Draft.get_draft(username, params[:num].to_i)
-    liquid :draft_display, :locals => { :draft => draft }
+    liquid :draft_display, :locals => { :title => draft.draft, :text => draft.content }
 end
 
 get "/signup" do
